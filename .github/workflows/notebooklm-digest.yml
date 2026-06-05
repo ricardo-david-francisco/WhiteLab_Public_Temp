@@ -32,7 +32,7 @@ jobs:
           wc -l dist/whitelab-bundle.md
           wc -c dist/whitelab-bundle.md
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: whitelab-bundle-${{ github.run_number }}
           path: dist/whitelab-bundle.md
