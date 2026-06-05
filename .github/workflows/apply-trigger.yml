@@ -1,0 +1,30 @@
+name: apply-trigger
+# Listens for the `apply:approved` label on a merged PR and emits an
+# authenticated webhook to the home-side Fortress Agent. CI itself
+# never applies anything to production targets.
+
+on:
+  pull_request:
+    types: [labeled, closed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  notify-fortress-agent:
+    if: |
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'apply:approved')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Emit signed webhook
+        env:
+          FORTRESS_WEBHOOK_URL: ${{ secrets.FORTRESS_WEBHOOK_URL }}
+          FORTRESS_WEBHOOK_TOKEN: ${{ secrets.FORTRESS_WEBHOOK_TOKEN }}
+        run: |
+          curl -fsSL -X POST "$FORTRESS_WEBHOOK_URL" \
+            -H "Authorization: Bearer $FORTRESS_WEBHOOK_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"pr\": ${{ github.event.pull_request.number }}, \"sha\": \"${{ github.event.pull_request.merge_commit_sha }}\", \"actor\": \"${{ github.actor }}\"}" \
+            || echo "Webhook delivery failed; agent must poll."

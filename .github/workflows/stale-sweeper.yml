@@ -1,0 +1,40 @@
+name: stale-sweeper
+
+on:
+  schedule:
+    # Daily at 07:00 UTC.
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          # 14 days of inactivity -> friendly nudge.
+          days-before-stale: 14
+          # 30 days total -> apply 'stale' label, never close.
+          days-before-close: -1
+          stale-issue-label: stale
+          stale-pr-label: stale
+          # The labels we never touch.
+          exempt-issue-labels: "status:next,pinned,security,critique"
+          exempt-pr-labels: "pinned,security"
+          # Soft-touch wording — this repo is a single-operator
+          # sandbox; no scolding.
+          stale-issue-message: |
+            No activity for 14 days. Marking with the `stale` label so
+            the weekly digest catches it. Add a comment, change a
+            label, or set `pinned` if you want to keep it visible
+            without further bumping.
+          stale-pr-message: |
+            No activity for 14 days. Marking with the `stale` label.
+            If this PR is parked on purpose, add the `pinned` label.
+          remove-stale-when-updated: true
+          # No auto-close, no PR-only mode, full-fleet sweep.
+          operations-per-run: 100

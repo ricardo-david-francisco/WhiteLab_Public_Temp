@@ -1,0 +1,37 @@
+# AdGuard Home minimal config (placeholder — apply-time hydrated).
+
+http:
+  address: 127.0.0.1:3000
+
+users:
+  - name: admin
+    password: OPNSENSE_PWD_HASH_010 # bcrypt hash, scrubbed
+
+dns:
+  bind_hosts:
+    - 192.168.25.10
+  port: 53
+  upstream_dns:
+    - tls://dns.quad9.net
+    - tls://1.1.1.1
+  bootstrap_dns:
+    - 9.9.9.9
+    - 1.1.1.1
+  enable_dnssec: true
+  cache_size: 4194304
+  ratelimit: 50
+
+filtering:
+  protection_enabled: true
+  filtering_enabled: true
+  parental_enabled: false
+  safebrowsing_enabled: true
+
+querylog:
+  enabled: true
+  interval: 24h
+  size_memory: 1000
+
+statistics:
+  enabled: true
+  interval: 24h

@@ -1,0 +1,52 @@
+name: critique-sync
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "docs/contributions/running summary of unified contributions/unified critique/unified-critique.md"
+      - "docs/decisions/**"
+      - "tools/critique/sync-critique-findings.sh"
+  schedule:
+    # Mondays 06:00 UTC — early-week sweep so the week starts triaged.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      print_only:
+        description: "Dry-run (print-only)"
+        required: false
+        default: "false"
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: critique-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install jq + python
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y jq python3 >/dev/null
+
+      - name: Sync critique -> issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          chmod +x tools/critique/sync-critique-findings.sh
+          if [[ "${{ inputs.print_only }}" == "true" ]]; then
+            bash tools/critique/sync-critique-findings.sh --print-only
+          else
+            bash tools/critique/sync-critique-findings.sh
+          fi

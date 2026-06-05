@@ -1,0 +1,85 @@
+name: snyk
+on:
+    pull_request:
+    push:
+        branches: [ master ]
+    schedule:
+        - cron: "0 5 * * 1" # Monday 05:00 UTC
+
+permissions:
+    contents: read
+
+# Design-phase posture:
+#   * Snyk Code, Snyk IaC, Snyk deps run on every PR.
+#   * The `secrets` context is not available in `jobs.<id>.if` per GitHub
+#     docs, so a tiny `check-secret` job exposes the presence of the
+#     SNYK_TOKEN secret as an output. Each Snyk job depends on it via
+#     `needs.check-secret.outputs.has_token == 'true'`.
+#   * Findings are printed to the job log. SARIF upload is intentionally
+#     disabled until GitHub Advanced Security / Code Scanning is enabled
+#     on the repo.
+
+jobs:
+    check-secret:
+        runs-on: ubuntu-latest
+        outputs:
+            has_token: ${{ steps.probe.outputs.has_token }}
+        steps:
+            - id: probe
+              env:
+                  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+              run: |
+                  if [ -n "${SNYK_TOKEN:-}" ]; then
+                    echo "has_token=true" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "has_token=false" >> "$GITHUB_OUTPUT"
+                    echo "::warning::SNYK_TOKEN secret not set; Snyk gates will be skipped."
+                  fi
+
+    snyk-code:
+        needs: check-secret
+        if: needs.check-secret.outputs.has_token == 'true'
+        runs-on: ubuntu-latest
+        env:
+            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        steps:
+            - uses: actions/checkout@v6
+            - uses: snyk/actions/setup@master
+            - name: snyk code test
+              run: snyk code test --severity-threshold=high || true
+
+    snyk-iac:
+        needs: check-secret
+        if: needs.check-secret.outputs.has_token == 'true'
+        runs-on: ubuntu-latest
+        env:
+            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        steps:
+            - uses: actions/checkout@v6
+            - uses: snyk/actions/setup@master
+            - name: snyk iac test
+              run: |
+                  snyk iac test --severity-threshold=high \
+                    infra/lxc/ infra/proxmox/ infra/caddy/ \
+                    || echo "::warning::Snyk IaC reported HIGH/CRITICAL findings (informational during design phase)"
+
+    snyk-deps:
+        needs: check-secret
+        if: needs.check-secret.outputs.has_token == 'true'
+        runs-on: ubuntu-latest
+        env:
+            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        steps:
+            - uses: actions/checkout@v6
+            - uses: actions/setup-python@v6
+              with:
+                  python-version: "3.11"
+            - uses: snyk/actions/setup@master
+            - name: snyk python deps
+              run: |
+                  if [ -f tools/requirements.txt ]; then
+                    pip install -r tools/requirements.txt
+                    snyk test --severity-threshold=high --file=tools/requirements.txt
+                  else
+                    echo "tools/requirements.txt not present; skipping Snyk Open Source"
+                  fi

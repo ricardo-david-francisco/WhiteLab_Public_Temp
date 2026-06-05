@@ -1,0 +1,35 @@
+name: zero-trust-guard
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  no-ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Establish base ref
+        id: base
+        run: |
+          if [[ -n "${{ github.base_ref }}" ]]; then
+            git fetch origin "${{ github.base_ref }}" --depth=200
+            echo "ref=origin/${{ github.base_ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=HEAD~1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run no-ssh guard
+        env:
+          BASE_REF: ${{ steps.base.outputs.ref }}
+        run: |
+          chmod +x tools/guards/no-ssh.sh
+          bash tools/guards/no-ssh.sh

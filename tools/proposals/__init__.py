@@ -1,0 +1,1 @@
+"""Snippet → draft-PR funnel."""

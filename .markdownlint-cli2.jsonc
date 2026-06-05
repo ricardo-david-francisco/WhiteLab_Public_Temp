@@ -1,0 +1,25 @@
+{
+    "globs": [
+        "**/*.md"
+    ],
+    "ignores": [
+        "node_modules",
+        ".sandbox",
+        ".pytest_cache",
+        ".ruff_cache",
+        ".mypy_cache",
+        ".venv",
+        "venv",
+        ".pr-body-*.md",
+        "tools/fortress-agent/vault/**"
+    ],
+    "config": {
+        "default": true,
+        "MD013": false,
+        "MD024": {
+            "siblings_only": true
+        },
+        "MD033": false,
+        "MD041": false
+    }
+}

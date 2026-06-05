@@ -1,0 +1,46 @@
+# WhiteLab dev sandbox — containerized variant.
+#
+# This is an alternative to `sandbox/bootstrap.sh` for hosts without WSL.
+# It bind-mounts the repo at /workspace and runs as UID 1000 so file
+# ownership stays sane.
+#
+# Usage:
+#   docker compose -f sandbox/docker-compose.yml build
+#   docker compose -f sandbox/docker-compose.yml run --rm sandbox
+
+services:
+  sandbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: whitelab/sandbox:dev
+    container_name: whitelab-sandbox
+    # Repo root is mounted read-write because we author files inside the
+    # container; restrict scope by binding only the repo, never $HOME.
+    volumes:
+      - ../:/workspace:rw
+      # Persist gh auth and age/sops keys across container runs without
+      # leaking them onto the host outside the sandbox folder.
+      - ../.sandbox/state/gh:/home/whitelab/.config/gh:rw
+      - ../.sandbox/state/age:/home/whitelab/.config/age:rw
+    working_dir: /workspace
+    environment:
+      GH_CONFIG_DIR: /home/whitelab/.config/gh
+      # Required by gh's web auth flow when launched headlessly:
+      BROWSER: /bin/true
+    # No ports exposed. No network restrictions enforced here — when running
+    # against the homelab over Tailscale/WireGuard, the host network rules
+    # already apply.
+    stdin_open: true
+    tty: true
+    # Run as the same UID as the typical Linux user.
+    user: "1000:1000"
+    # Hard limits: keep the dev container modest.
+    cpus: "2.0"
+    mem_limit: 1g
+    pids_limit: 512
+    # Drop everything we don't need.
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # tools write under /workspace; rootfs stays unchanged

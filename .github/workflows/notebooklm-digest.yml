@@ -1,0 +1,40 @@
+---
+name: notebooklm-digest
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install pyyaml lxml
+
+      - name: Build NotebookLM bundle (anonymise-or-refuse)
+        run: bash tools/digest/digest-repo.sh
+
+      - name: Show bundle stats
+        run: |
+          ls -la dist/
+          wc -l dist/whitelab-bundle.md
+          wc -c dist/whitelab-bundle.md
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: whitelab-bundle-${{ github.run_number }}
+          path: dist/whitelab-bundle.md
+          retention-days: 90
+          if-no-files-found: error

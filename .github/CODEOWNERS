@@ -1,0 +1,8 @@
+# Code owners — every PR touching infra/ or policies must be reviewed
+# by the home-lab owner. Tooling and docs are open to lighter review.
+
+*                       @ricardo-david-francisco
+infra/policies/         @ricardo-david-francisco
+.github/workflows/      @ricardo-david-francisco
+tools/fortress-agent/   @ricardo-david-francisco
+tools/anonymizer/       @ricardo-david-francisco

@@ -1,0 +1,55 @@
+name: Proposal — paste a snippet to land as a draft PR
+description: |
+  Drop a code snippet (from NotebookLM, Claude, Gemini, a phone, your
+  brain) into the issue body and label it `proposal:apply`. CI will
+  open a draft PR with the change. Always draft. Never auto-merged.
+title: "[proposal] <title>"
+labels: ["proposal:apply", "status:inbox"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## How this works
+
+        1. Edit the body below: replace the `target:` line with the
+           **repo-relative path** the snippet should land at, and the
+           code fence with your snippet.
+        2. Submit. The `proposal-apply` workflow will run.
+        3. A draft PR will appear linked to this issue.
+
+        **Hard limits.** The funnel refuses to:
+
+        - write outside `docs/`, `infra/`, `tools/`, `tests/`, `inbox/`,
+          or the three top-level docs (README/AGENTS/CONTRIBUTING);
+        - write inside `tools/guards/`, `tools/proposals/`,
+          `tools/anonymizer/`, `policy/`, `vault/`, `audit/`, or
+          `.github/workflows/` — these define the security envelope;
+        - apply a snippet that contains a plaintext password, token,
+          API key, MAC, public IP, private key, or JWT.
+
+        Multiple `target:` blocks are allowed in a single body.
+
+  - type: input
+    id: short-rationale
+    attributes:
+      label: One-line rationale
+      description: Why this snippet exists.
+      placeholder: e.g. add a runbook for deploying Immich on CT-103.
+    validations:
+      required: true
+
+  - type: textarea
+    id: body
+    attributes:
+      label: Snippet payload
+      description: |
+        Use the exact shape below — `target:` line followed by a
+        fenced code block. Repeat for multiple files.
+      value: |
+        target: docs/runbooks/example.md
+
+        ```markdown
+        # Replace me with the actual content.
+        ```
+    validations:
+      required: true

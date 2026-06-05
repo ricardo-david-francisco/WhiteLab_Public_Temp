@@ -1,0 +1,44 @@
+# tools/notify/channels.yaml
+# The only knob for swapping notification channels. See
+# tools/notify/README.md for the contract and ADR-0001 for the
+# decision record.
+
+channels:
+  email:
+    enabled: true
+    # SMTP host + port. Use the STARTTLS port (587) for Gmail and
+    # most providers. Keep the host configurable so a future move
+    # to a self-hosted relay does not require code changes.
+    smtp_host: "smtp.gmail.com"
+    smtp_port: 587
+    # The "from" address. The password is read from the env var
+    # NOTIFY_SMTP_PASS (or GitHub Actions secret of the same name)
+    # and is never stored in the repo.
+    from_addr: "whitelab-bot@example.com"
+    # One or more "to" addresses. The mobile inbox you actually read.
+    to_addrs:
+      - "operator@example.com"
+    # Optional: prefix every subject so a phone filter can route the
+    # mail into a "WhiteLab" label.
+    subject_prefix: "[WhiteLab]"
+
+  ntfy:
+    enabled: false
+    # Self-hosted instance to keep the channel zero-third-party.
+    # base_url: "https://ntfy.example.lan"
+    # topic: "whitelab-ops"
+    # auth_user: "whitelab-bot"
+    # auth_token_env: "NOTIFY_NTFY_TOKEN"
+
+  signal:
+    enabled: false
+    # signal-cli wrapper. Stub — implement when needed.
+    # cli_path: "/usr/local/bin/signal-cli"
+    # account: "+15555550100"
+    # recipient: "+15555550101"
+
+  github:
+    enabled: false
+    # No-op adapter. Relies on the operator having GitHub mobile
+    # notifications turned on. Useful when running with no other
+    # channel available (e.g. WAN out, SMTP down).

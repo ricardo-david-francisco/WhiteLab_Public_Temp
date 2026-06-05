@@ -1,0 +1,52 @@
+# Declarative spec for CT-105 — fed to the Proxmox adapter.
+# All values are anonymized per tools/anonymizer/lexicon.example.yaml.
+# The fortress-agent rehydrates real values at apply time from
+# /run/fortress/anonmap.json.
+
+apiVersion: whitelab.local/v1
+kind: LXCContainer
+metadata:
+  vmid: 105
+  hostname: adguard-dmz
+  node: HOST_SECONDARY # n305
+  description: AdGuard Home — DMZ recursive resolver
+
+spec:
+  unprivileged: true
+  features:
+    nesting: true # required for Docker
+    keyctl: true
+  ostemplate: local:vztmpl/IMG-DEB12-DOCKER-v2.tar.zst
+  lineage: deb12-docker-v2
+
+  rootfs:
+    storage: local-zfs
+    size_gib: 6
+
+  resources:
+    cores: 1
+    memory_mib: 512
+    swap_mib: 0
+
+  network:
+    - id: net0
+      bridge: vmbr2
+      ipv4_cidr: 192.168.25.10/24
+      gateway: 192.168.25.1
+      firewall: true
+      mtu: 1500
+      # No tag: vmbr2 is the dedicated DMZ bridge, untagged on the wire.
+
+  startup:
+    order: 5
+    up_seconds: 30
+    down_seconds: 30
+
+  tailscale:
+    tag: tag:server
+    auth_key_ref: TS_AUTHKEY_001
+
+  audit:
+    snyk: required
+    trivy: required
+    lynis_min_score: 80

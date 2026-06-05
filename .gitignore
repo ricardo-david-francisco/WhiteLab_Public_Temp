@@ -1,0 +1,111 @@
+# =====================================================================
+# WhiteLab .gitignore
+# Hard barrier against committing local sandbox state, raw exports,
+# secrets, and tooling caches. See SECURITY.md.
+# =====================================================================
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# --- Sandbox (generated, portable; NEVER push) ---
+.sandbox/
+sandbox/.cache/
+
+# --- Python tooling ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.env
+.env.*
+!.env.example
+
+# --- Terraform / IaC ---
+**/.terraform/
+**/.terraform.lock.hcl.bak
+**/terraform.tfstate
+**/terraform.tfstate.*
+**/.terraform.tfstate.lock.info
+*.tfvars
+*.tfvars.json
+!example.tfvars
+!*.example.tfvars
+
+# --- Docker ---
+**/.docker/
+docker-compose.override.yml
+docker-compose.*.local.yml
+
+# --- Secrets & raw exports (NEVER commit) ---
+# Anything under /vault is the local-only working copy of raw, sensitive material.
+vault/
+**/raw/
+**/secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+*.kdbx
+*.gpg
+*.asc.private
+
+# Raw OPNsense / Proxmox / Omada exports — only sanitized copies are committed.
+*.raw.xml
+*.raw.json
+*.raw.yaml
+*.raw.yml
+*.raw.conf
+config-*.xml
+!config-*.sanitized.xml
+
+# Backup blobs from devices
+*.bak
+*.backup
+*.dump
+
+# age / sops keys at rest (must live in vault/ or OS keyring, never elsewhere)
+age.key
+*.age.key
+sops.key
+*.sops.key
+
+# --- Build / scratch ---
+dist/
+build/
+tmp/
+.cache/
+
+# --- Logs ---
+*.log
+
+# --- Research scratch (out-of-tree clones, digests, helper scripts) ---
+# These hold untrusted/raw material from old repos and chat exports;
+# they MUST stay local. Only the synthesized, sanitized doc under
+# docs/research/ is committed.
+.Gemini_Chats_Home_Infra/
+.probe.sh
+.clone-home-infra.sh
+.digest.sh
+.digest.txt
+.pr-body.md
+.open-pr.sh
+.sync-and-branch.sh
+.commit-and-push-bible.sh
+.open-pr-bible.sh
+.pr-body-bible.md
+.commit-and-push-fortress.sh
+.open-pr-fortress.sh
+.pr-body-fortress.md
+
+# --- Anonymizer map (LOCAL ONLY — encrypted to anonmap.age for transport) ---
+.anonmap.json
+anonmap.json
+anonmap.age
+

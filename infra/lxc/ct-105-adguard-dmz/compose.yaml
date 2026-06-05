@@ -1,0 +1,25 @@
+# Docker stack for AdGuard Home on CT-105.
+# Pinned digest is intentionally omitted from the placeholder; the
+# real digest is recorded in audit/snyk/snapshots/<date>.txt and
+# substituted at apply time.
+
+services:
+  adguard:
+    image: adguard/adguardhome:latest   # apply-time pin: see audit log
+    container_name: adguard
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_BIND_SERVICE
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./work:/opt/adguardhome/work
+      - ./conf:/opt/adguardhome/conf
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/control/status"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

@@ -1,0 +1,58 @@
+name: "Decision (reject / adapt a critique finding)"
+description: "Record an architectural decision in response to a critique finding."
+title: "[decision] "
+labels: ["decision", "status:next"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template when you want to **reject** or **adapt** a
+        finding from `unified-critique.md`. The result will be an ADR
+        under `docs/decisions/`. See [ADR-0001](../../docs/decisions/ADR-0001-approval-channel.md)
+        for an example.
+  - type: input
+    id: critique-anchor
+    attributes:
+      label: Critique anchor
+      description: |
+        The slug of the critique section, e.g. `#2-operational-friction-at-the-totp-gate`.
+        Find it by clicking the heading in `unified-critique.md` on GitHub.
+      placeholder: "#3-hardening-inconsistency-ssh-surface-across-nodes"
+    validations:
+      required: true
+  - type: dropdown
+    id: disposition
+    attributes:
+      label: Disposition
+      options:
+        - "Reject (we are not going to do this)"
+        - "Adapt (we will do something different that addresses the same risk)"
+        - "Accept (record an ADR even though we are doing what was suggested)"
+    validations:
+      required: true
+  - type: textarea
+    id: alternative
+    attributes:
+      label: Alternative we will pursue
+      description: "If adapting or rejecting, describe what we will do instead."
+      placeholder: "Pluggable notify adapter, default email/SMTP."
+    validations:
+      required: true
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale
+      description: |
+        Why this disposition? Two to six sentences. Future-you will
+        thank you for the detail.
+    validations:
+      required: true
+  - type: checkboxes
+    id: acks
+    attributes:
+      label: Author acknowledgements
+      options:
+        - label: "I will draft the ADR file under `docs/decisions/ADR-NNNN-<slug>.md` before closing this issue."
+          required: true
+        - label: "I will add the matching `related-critique:` anchor to the ADR front-matter so the importer auto-marks the finding as adopted."
+          required: true

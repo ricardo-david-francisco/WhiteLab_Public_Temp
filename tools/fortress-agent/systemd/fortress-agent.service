@@ -1,0 +1,44 @@
+[Unit]
+Description=WhiteLab Fortress Agent
+Documentation=https://github.com/ricardo-david-francisco/15_WhiteLab/blob/master/docs/architecture/2.0-fortress-design.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=fortress
+Group=fortress
+WorkingDirectory=/opt/fortress
+# Vault is tmpfs; service refuses to start if /run/fortress is not a tmpfs mount.
+ExecStartPre=/usr/bin/mountpoint -q /run/fortress
+ExecStart=/opt/fortress/.venv/bin/python -m tools.fortress_agent.agent \
+    --repo /opt/fortress/repo \
+    --vault /run/fortress \
+    --poll 60
+# Apply requires manual systemctl override after TOTP unlock; default is dry-run.
+Restart=on-failure
+RestartSec=10s
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+ReadWritePaths=/run/fortress /opt/fortress/repo /var/log/fortress
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target

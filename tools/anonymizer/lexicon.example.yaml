@@ -1,0 +1,57 @@
+# Lexicon — placeholder catalog (examples only, NEVER real values).
+#
+# This file is committed and read by humans to understand what each
+# placeholder means. The generator in tools/anonymizer/anonymize.py
+# allocates new IDs by appending to .anonmap.json (gitignored).
+#
+# Format: <CLASS>_<NNN>  where NNN is a zero-padded counter.
+
+version: 1
+
+placeholder_examples:
+
+  HOST_PRIMARY: "fortress-n95"
+  HOST_SECONDARY: "fortress-n305"
+  TAILNET: "tail-example"
+
+  HOST_001: "opnsense"
+  HOST_002: "omada"
+  HOST_003: "lxc-100"
+
+  MAC_001: "AA:BB:CC:DD:EE:01"
+  MAC_002: "AA:BB:CC:DD:EE:02"
+
+  PUBLIC_IPV4_001: "203.0.113.10"
+  PUBLIC_IPV6_001: "2001:db8::1"
+
+  SERIAL_001: "ABCDEFGH1234"
+
+  TS_NODE_001: "100.64.0.10"
+  TS_AUTHKEY_001: "tskey-auth-EXAMPLE-DO-NOT-USE"
+
+  WG_PRIV_001: "EXAMPLE_WG_PRIVATE_KEY_AAAAAAAAAAAAAAAAAAAAAAA="
+  WG_PUB_001: "EXAMPLE_WG_PUBLIC_KEY_AAAAAAAAAAAAAAAAAAAAAAAAA="
+  WG_PSK_001: "EXAMPLE_WG_PRESHARED_KEY_AAAAAAAAAAAAAAAAAAAAA="
+
+  OPNSENSE_PWD_HASH_001: "$2y$10$EXAMPLE.bcrypt.placeholder.value.aaaaaaaaaaaaaaa"
+  OPNSENSE_API_KEY_001: "EXAMPLE-API-KEY-0000"
+  OPNSENSE_API_SEC_001: "EXAMPLE-API-SECRET-0000"
+
+  PVE_TOKEN_001: "EXAMPLE-PVE-API-TOKEN-0000"
+  PVE_TOTP_001: "EXAMPLE-TOTP-SECRET-0000"
+
+  OMADA_TOKEN_001: "EXAMPLE-OMADA-OPENAPI-TOKEN-0000"
+
+  TLS_PRIV_001: "<TLS private key, scrubbed>"
+  TLS_CERT_001: "<TLS certificate, scrubbed>"
+  SSH_AUTH_KEYS_001: "<authorized_keys file, scrubbed>"
+
+  AGE_PUB_001: "age1example0000000000000000000000000000000000000000000000000"
+  AGE_PRIV_001: "AGE-SECRET-KEY-1EXAMPLE000000000000000000000000000000000000000"
+
+  SNYK_TOKEN_001: "EXAMPLE-SNYK-TOKEN-0000-0000-000000000000"
+
+  CP_USER_PWD_001: "$2y$10$EXAMPLE.captive.portal.user.password.placeholder"
+
+  IPSEC_PSK_001: "EXAMPLE-IPSEC-PSK-0000"
+  OPENVPN_TLSAUTH_001: "<OpenVPN tls-auth key block, scrubbed>"

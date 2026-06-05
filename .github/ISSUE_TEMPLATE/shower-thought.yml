@@ -1,0 +1,29 @@
+name: Shower thought
+description: Ultra-low-friction capture. One bullet, ship it. Triage happens later.
+title: "[shower] "
+labels:
+    - shower-thought
+    - status:inbox
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Designed for **GitHub Mobile**. Type the idea, hit submit. The
+              maintainer will triage it into bug / RFC / out-of-scope on the
+              next working session. See
+              [`docs/roadmap/README.md`](../../docs/roadmap/README.md).
+    - type: textarea
+      id: idea
+      attributes:
+          label: The idea
+          description: One bullet is enough. Add more on triage day.
+          placeholder: e.g. N305 doesn't auto-power-on after a brownout.
+      validations:
+          required: true
+    - type: textarea
+      id: context
+      attributes:
+          label: Context (optional)
+          description: Where you were, what triggered it, anything that helps.
+      validations:
+          required: false

@@ -1,0 +1,83 @@
+name: Roadmap Sync
+
+# Keeps docs/roadmap/active-roadmap.md in agreement with live GitHub
+# Issues. Triggers:
+#   * any issue event (open, edit, label change, close, reopen),
+#   * after a push to the default branch (so a PR that closes an
+#     issue refreshes the snapshot once merged),
+#   * a daily safety-net cron at 06:15 UTC,
+#   * manual workflow_dispatch from the Actions tab.
+#
+# The job regenerates the snapshot and commits it back with
+# [skip ci] to avoid retrigger loops. The snapshot is
+# parser-invisible to other CI jobs and never blocks PRs.
+
+on:
+  issues:
+    types:
+      - opened
+      - edited
+      - labeled
+      - unlabeled
+      - closed
+      - reopened
+      - deleted
+      - transferred
+      - assigned
+      - unassigned
+  push:
+    branches:
+      - master
+  schedule:
+    # Morning + evening sweep so the snapshot is never more than ~12h
+    # out of date even if no issue events fire.
+    - cron: "15 6 * * *"
+    - cron: "15 18 * * *"
+  workflow_run:
+    # Re-render the roadmap right after the critique importer runs,
+    # so newly imported critique issues appear immediately.
+    workflows: ["critique-sync"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: read
+
+concurrency:
+  group: roadmap-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Install jq
+        run: sudo apt-get update -y && sudo apt-get install -y jq
+
+      - name: Regenerate active roadmap snapshot
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          chmod +x tools/roadmap/sync-roadmap.sh
+          bash tools/roadmap/sync-roadmap.sh
+
+      - name: Commit snapshot if changed
+        run: |
+          if git diff --quiet -- docs/roadmap/active-roadmap.md; then
+            echo "active-roadmap.md unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/roadmap/active-roadmap.md
+          git commit -m "chore(roadmap): auto-sync active roadmap from issues [skip ci]"
+          git push origin HEAD:master

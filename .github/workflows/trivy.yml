@@ -1,0 +1,47 @@
+---
+name: trivy
+
+on:
+    pull_request:
+    push:
+        branches:
+            - master
+
+permissions:
+    contents: read
+    security-events: write
+
+# Design-phase posture:
+#   * Trivy runs on every PR and prints HIGH/CRITICAL findings as a table.
+#   * exit-code is currently "0" so findings are informational. Flip to "1"
+#     once placeholder IaC under infra/ is replaced by real configs and the
+#     misconfig backlog is cleared.
+#   * SARIF upload is intentionally disabled until GitHub Advanced Security
+#     / Code Scanning is enabled on the repo (free private repos cannot
+#     accept SARIF uploads otherwise).
+
+jobs:
+    trivy-fs:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+            - uses: aquasecurity/trivy-action@v0.36.0
+              with:
+                  scan-type: fs
+                  scan-ref: .
+                  severity: HIGH,CRITICAL
+                  exit-code: "0"
+                  ignore-unfixed: true
+                  format: table
+
+    trivy-config:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+            - uses: aquasecurity/trivy-action@v0.36.0
+              with:
+                  scan-type: config
+                  scan-ref: .
+                  severity: HIGH,CRITICAL
+                  exit-code: "0"
+                  format: table

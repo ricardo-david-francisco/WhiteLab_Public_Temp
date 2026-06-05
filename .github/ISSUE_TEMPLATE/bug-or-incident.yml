@@ -1,0 +1,45 @@
+name: Bug or incident
+description: Something broke, drifted, or behaved unexpectedly.
+title: "[bug] "
+labels:
+    - bug
+    - status:inbox
+body:
+    - type: dropdown
+      id: severity
+      attributes:
+          label: Severity
+          options:
+              - Critical (data loss / lab unreachable)
+              - High (degraded service)
+              - Medium (workaround exists)
+              - Low (cosmetic)
+      validations:
+          required: true
+    - type: input
+      id: incident_id
+      attributes:
+          label: Incident ID (if known)
+          placeholder: INC-NADD-DRIFT-01
+    - type: textarea
+      id: summary
+      attributes:
+          label: What happened
+      validations:
+          required: true
+    - type: textarea
+      id: expected
+      attributes:
+          label: What was expected
+      validations:
+          required: true
+    - type: textarea
+      id: repro
+      attributes:
+          label: Reproduction or evidence
+          description: Logs, screenshots, commit hashes, run IDs.
+    - type: textarea
+      id: scope
+      attributes:
+          label: Affected components
+          description: VLAN, host, LXC, runbook, RFC, etc.

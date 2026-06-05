@@ -1,0 +1,27 @@
+# Deterministic line endings; treat shell/IaC/config files as LF always.
+* text=auto eol=lf
+
+# Always-binary asset types (no diff/merge attempts).
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.zip    binary
+*.gz     binary
+*.tar    binary
+*.7z     binary
+*.bin    binary
+*.img    binary
+*.iso    binary
+
+# Source / IaC / sanitized config exports — LF.
+*.sh         text eol=lf
+*.env        text eol=lf
+Makefile     text eol=lf
+Dockerfile   text eol=lf
+*.yml        text eol=lf
+*.yaml       text eol=lf
+*.json       text eol=lf
+*.toml       text eol=lf
+*.xml        text eol=lf
+*.conf       text eol=lf

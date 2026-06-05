@@ -1,0 +1,191 @@
+name: proposal-apply
+# Snippet → draft-PR funnel.
+#
+# Two channels:
+#   A) Issue labelled `proposal:apply` (paste path + code block in body).
+#   B) Push to master that touches `inbox/<slug>/manifest.yml`.
+#
+# Both call `python -m tools.proposals.cli`, which validates the
+# proposal against the path allow-list and the anonymiser. On success
+# the workflow opens a **draft** PR linked to the issue (channel A) or
+# titled after the inbox slug (channel B). Auto-merge is impossible
+# from this workflow — the PR is always draft, no `gh pr merge` call
+# exists, and human review is required to mark it ready.
+
+on:
+  issues:
+    types: [labeled]
+  push:
+    branches: [master]
+    paths:
+      - "inbox/**"
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+
+  # --------------------------------------------------------------------
+  # Channel A — issue body
+  # --------------------------------------------------------------------
+  from-issue:
+    if: github.event_name == 'issues' && github.event.label.name == 'proposal:apply'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install pyyaml lxml
+
+      - name: Configure git
+        run: |
+          git config user.name  "whitelab-bot"
+          git config user.email "whitelab-bot@users.noreply.github.com"
+
+      - name: Persist issue body
+        env:
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          mkdir -p .ci-tmp
+          printf '%s' "$BODY" > .ci-tmp/body.md
+
+      - name: Validate + apply proposal
+        id: apply
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          slug="proposal-${ISSUE_NUMBER}"
+          branch="proposal/issue-${ISSUE_NUMBER}"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "slug=$slug"     >> "$GITHUB_OUTPUT"
+          git checkout -b "$branch"
+          python -m tools.proposals.cli --issue-body-file .ci-tmp/body.md
+          rm -rf .ci-tmp
+
+      - name: Commit + push
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          BRANCH: ${{ steps.apply.outputs.branch }}
+        run: |
+          set -euo pipefail
+          git add -A
+          if git diff --cached --quiet; then
+            echo "nothing to commit; aborting." >&2
+            exit 1
+          fi
+          git commit -s -m "proposal: apply snippet from #${ISSUE_NUMBER}
+
+          Closes #${ISSUE_NUMBER}
+
+          Title: ${ISSUE_TITLE}"
+          git push -u origin "$BRANCH"
+
+      - name: Open draft PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          BRANCH: ${{ steps.apply.outputs.branch }}
+        run: |
+          gh pr create \
+            --draft \
+            --title "WIP[proposal]: ${ISSUE_TITLE}" \
+            --head "$BRANCH" \
+            --base master \
+            --body "Auto-applied from #${ISSUE_NUMBER}.
+
+          Closes #${ISSUE_NUMBER}
+
+          The proposal funnel never auto-merges. Review the diff,
+          run \`make ci\` locally if you want to mirror CI, then mark
+          this PR Ready for Review when satisfied."
+
+  # --------------------------------------------------------------------
+  # Channel B — inbox folder push
+  # --------------------------------------------------------------------
+  from-inbox:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install pyyaml lxml
+
+      - name: Configure git
+        run: |
+          git config user.name  "whitelab-bot"
+          git config user.email "whitelab-bot@users.noreply.github.com"
+
+      - name: Find inbox slugs touched by this push
+        id: slugs
+        run: |
+          set -euo pipefail
+          # Limit to manifest changes so a noisy README edit does not
+          # re-trigger the funnel.
+          mapfile -t slugs < <(git diff --name-only HEAD~1..HEAD -- 'inbox/*/manifest.yml' \
+              | awk -F'/' '{print $2}' | sort -u)
+          if [[ ${#slugs[@]} -eq 0 ]]; then
+            echo "no inbox manifests in this push." >&2
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          printf '%s\n' "${slugs[@]}"
+          {
+            echo 'slugs<<EOF'
+            printf '%s\n' "${slugs[@]}"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Apply each slug
+        if: steps.slugs.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLUGS: ${{ steps.slugs.outputs.slugs }}
+        run: |
+          set -euo pipefail
+          while IFS= read -r slug; do
+            [[ -z "$slug" ]] && continue
+            branch="proposal/inbox-${slug}"
+            git fetch origin master:master 2>/dev/null || true
+            git checkout -B "$branch" master
+
+            # Apply the snippet to the working tree.
+            python -m tools.proposals.cli --inbox "inbox/${slug}"
+
+            # Once applied, remove the inbox folder so the channel is
+            # idempotent: re-pushing the same slug will fail loudly.
+            git rm -r "inbox/${slug}"
+
+            if git diff --cached --quiet; then
+              echo "no diff for slug=${slug}; skipping." >&2
+              continue
+            fi
+            git commit -s -m "proposal[inbox]: apply ${slug}"
+            git push -u origin "$branch"
+            gh pr create \
+              --draft \
+              --title "WIP[proposal]: inbox/${slug}" \
+              --head "$branch" \
+              --base master \
+              --body "Auto-applied from \`inbox/${slug}/\`.
+
+            The proposal funnel never auto-merges. Review the diff,
+            then mark this PR Ready for Review when satisfied."
+          done <<< "${SLUGS}"

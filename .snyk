@@ -1,0 +1,18 @@
+# Snyk (https://snyk.io) policy file.
+# See: https://docs.snyk.io/manage-issues/snyk-policies
+version: v1.25.0
+
+# -----------------------------------------------------------------------------
+# Snyk Code — accepted findings with documented compensating controls.
+# -----------------------------------------------------------------------------
+# Each entry must include a justification explaining why the finding is a
+# false positive or has been mitigated outside Snyk's view.
+exclude:
+  code:
+    # Patterns are loaded from tools/anonymizer/rules.yaml — a committed,
+    # code-reviewed configuration file shipped with the repository, not
+    # arbitrary user input. The Rule class additionally caps every pattern
+    # at 1024 characters before compilation as defence in depth against
+    # accidentally introducing a catastrophic-backtracking regex.
+    # See tools/anonymizer/anonymize.py: class Rule._MAX_PATTERN_LEN.
+    - tools/anonymizer/anonymize.py

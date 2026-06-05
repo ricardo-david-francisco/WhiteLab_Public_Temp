@@ -1,0 +1,113 @@
+---
+name: docs-up-to-date
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Determine merge-base
+        id: base
+        run: |
+          base_sha="${{ github.event.pull_request.base.sha }}"
+          head_sha="${{ github.event.pull_request.head.sha }}"
+          echo "base=${base_sha}" >> "${GITHUB_OUTPUT}"
+          echo "head=${head_sha}" >> "${GITHUB_OUTPUT}"
+
+      - name: Check linked issue in PR body
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if printf '%s\n%s' "${PR_BODY}" "${PR_TITLE}" \
+             | grep -Eiq '(fixes|closes|refs|resolves)[[:space:]]*#[0-9]+'; then
+            echo "ok: PR references an issue"
+          else
+            echo "::error::PR body or title must reference an issue"
+            echo "::error::(use 'Fixes #N', 'Closes #N', 'Refs #N', or 'Resolves #N')"
+            exit 1
+          fi
+
+      - name: Check linked issue is triaged
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -eu
+          if printf '%s' "${LABELS}" | grep -q '"docs-skip"'; then
+            echo "ok: docs-skip label set; not checking issue triage state"
+            exit 0
+          fi
+          # Pull the first referenced issue number from the PR body/title.
+          ref=$(printf '%s\n%s' "${PR_BODY}" "${PR_TITLE}" \
+            | grep -Eio '(fixes|closes|refs|resolves)[[:space:]]*#[0-9]+' \
+            | head -1 \
+            | grep -Eo '[0-9]+')
+          if [ -z "${ref:-}" ]; then
+            echo "ok: no parseable issue ref (already failed earlier step otherwise)"
+            exit 0
+          fi
+          state=$(gh issue view "$ref" --repo "$REPO" \
+            --json labels --jq '[.labels[].name] | join(",")' || echo "")
+          echo "Linked issue #$ref labels: $state"
+          if printf '%s' "$state" | grep -q 'status:inbox'; then
+            echo "::error::Linked issue #$ref is still status:inbox."
+            echo "::error::Triage it first (apply status:next or status:in-progress)"
+            echo "::error::or add the 'docs-skip' label to this PR if intentional."
+            exit 1
+          fi
+          echo "ok: linked issue #$ref is triaged"
+
+      - name: Check docs-updated when behaviour changes
+        env:
+          BASE: ${{ steps.base.outputs.base }}
+          HEAD: ${{ steps.base.outputs.head }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          set -eu
+          changed=$(git diff --name-only "${BASE}" "${HEAD}")
+          echo "Changed files:"
+          echo "${changed}"
+          behaviour_paths='^(infra/|tools/fortress-agent/|\.github/workflows/)'
+          docs_paths='^docs/'
+          if echo "${changed}" | grep -Eq "${behaviour_paths}"; then
+            if echo "${changed}" | grep -Eq "${docs_paths}"; then
+              echo "ok: behaviour change with matching docs/ change"
+            elif printf '%s' "${LABELS}" | grep -q '"docs-skip"'; then
+              echo "ok: docs-skip label set"
+            else
+              echo "::error::Behaviour change without docs/ update."
+              echo "::error::Add a matching docs/ change or the 'docs-skip' label."
+              exit 1
+            fi
+          else
+            echo "ok: no behaviour-affecting paths changed"
+          fi
+
+      - name: Check pending-RFC promotion
+        env:
+          BASE: ${{ steps.base.outputs.base }}
+          HEAD: ${{ steps.base.outputs.head }}
+        run: |
+          set -eu
+          changed=$(git diff --name-only "${BASE}" "${HEAD}")
+          rfc_added=$(echo "${changed}" \
+            | grep -E '^docs/contributions/pending-RFCs/RFC-[0-9]{4}-' || true)
+          if [ -n "${rfc_added}" ]; then
+            echo "Pending-RFC files in this PR:"
+            echo "${rfc_added}"
+            echo "Reminder: when an RFC is implemented, move it into"
+            echo "docs/architecture/ and leave a one-line stub behind."
+          fi

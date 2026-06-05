@@ -1,0 +1,41 @@
+name: RFC (design proposal)
+description: A new design that needs discussion before implementation.
+title: "[rfc] "
+labels:
+    - rfc
+    - status:inbox
+body:
+    - type: markdown
+      attributes:
+          value: |
+              Use this for changes that affect architecture, security
+              boundaries, or the apply path. The full RFC body lives in
+              `docs/contributions/pending-RFCs/RFC-NNNN-<slug>.md` and is
+              linked from this issue. See the template in
+              [`docs/contributions/pending-RFCs/README.md`](../../docs/contributions/pending-RFCs/README.md).
+    - type: input
+      id: rfc_id
+      attributes:
+          label: Proposed RFC ID
+          description: Allocate the next free number under docs/contributions/pending-RFCs/.
+          placeholder: RFC-0005
+      validations:
+          required: true
+    - type: textarea
+      id: problem
+      attributes:
+          label: Problem (one paragraph)
+      validations:
+          required: true
+    - type: textarea
+      id: proposal
+      attributes:
+          label: Proposal (one paragraph)
+      validations:
+          required: true
+    - type: textarea
+      id: acceptance
+      attributes:
+          label: Acceptance criteria (bullet list)
+      validations:
+          required: true

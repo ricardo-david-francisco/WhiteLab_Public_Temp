@@ -1,0 +1,38 @@
+# Pre-commit hook config. Activate locally with:
+#
+#   make hooks-install
+#
+# CI runs the same hooks under .github/workflows/ci.yml ("make ci").
+# Keep the hook list in lock-step with the Makefile `ci` target so
+# the local and remote contracts never diverge.
+
+repos:
+  - repo: local
+    hooks:
+      - id: detect-plaintext-secrets
+        name: detect plaintext secrets (gitleaks)
+        entry: tools/precommit/detect-plaintext-secrets.sh
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: verify-anonymization
+        name: verify anonymization (no cleartext under infra/)
+        entry: tools/precommit/verify-anonymization.py
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: ruff
+        name: ruff lint (tools/, tests/)
+        entry: ruff check tools/ tests/
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: yamllint
+        name: yamllint
+        entry: yamllint -c .yamllint tools/ infra/ .github/
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]

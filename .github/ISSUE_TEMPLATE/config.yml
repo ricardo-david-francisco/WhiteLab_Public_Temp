@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+    - name: Roadmap & operations
+      url: https://github.com/ricardo-david-francisco/WhiteLab/blob/master/docs/roadmap/README.md
+      about: How capture, triage, RFCs, and the Project board fit together.

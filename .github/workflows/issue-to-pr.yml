@@ -1,0 +1,115 @@
+name: issue-to-draft-pr
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  scaffold:
+    if: github.event.label.name == 'status:in-progress'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name  "whitelab-bot"
+          git config user.email "whitelab-bot@users.noreply.github.com"
+
+      - name: Compute branch name + slug
+        id: vars
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          slug="$(printf '%s' "$ISSUE_TITLE" \
+                  | tr '[:upper:]' '[:lower:]' \
+                  | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//' \
+                  | cut -c1-40)"
+          [[ -z "$slug" ]] && slug="work"
+          branch="auto/issue-${ISSUE_NUMBER}-${slug}"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "slug=$slug"     >> "$GITHUB_OUTPUT"
+
+      - name: Skip if branch already exists
+        id: exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git ls-remote --exit-code --heads origin \
+               "${{ steps.vars.outputs.branch }}" >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create branch + scratch marker
+        if: steps.exists.outputs.skip == 'false'
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+        run: |
+          set -euo pipefail
+          git checkout -b "${{ steps.vars.outputs.branch }}"
+          mkdir -p .scratch
+          cat > ".scratch/issue-${ISSUE_NUMBER}.md" <<EOF
+          # Working notes for #${ISSUE_NUMBER}
+
+          **Issue:** ${ISSUE_TITLE}
+          **Link:**  ${ISSUE_URL}
+
+          This file is a scratch marker created so the auto-draft PR
+          has at least one diff. It is safe to delete or replace
+          before the PR is ready for review.
+
+          - [ ] Add the actual change.
+          - [ ] Update docs / ADR if architecture changed.
+          - [ ] Remove this marker file before requesting review.
+          EOF
+          git add ".scratch/issue-${ISSUE_NUMBER}.md"
+          git commit -m "chore: scaffold for #${ISSUE_NUMBER}
+
+          Closes #${ISSUE_NUMBER}"
+          git push -u origin "${{ steps.vars.outputs.branch }}"
+
+      - name: Open draft PR
+        if: steps.exists.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+        run: |
+          set -euo pipefail
+          body=$(cat <<EOF
+          Auto-scaffolded from issue #${ISSUE_NUMBER}.
+
+          Closes #${ISSUE_NUMBER}
+
+          ### Why this PR exists
+          When an issue moves to \`status:in-progress\`, this workflow
+          opens a matching draft PR so nothing rots in a forgotten
+          branch. Once you push real commits and remove the scratch
+          marker, mark the PR Ready for Review.
+
+          ### Checklist
+          - [ ] Real change committed
+          - [ ] \`.scratch/issue-${ISSUE_NUMBER}.md\` removed
+          - [ ] Docs / ADR updated if architecture changed
+          - [ ] CI green (10 baseline checks + zero-trust guard)
+          EOF
+          )
+          gh pr create \
+            --draft \
+            --title "WIP: ${ISSUE_TITLE}" \
+            --body "$body" \
+            --head "${{ steps.vars.outputs.branch }}" \
+            --base master
