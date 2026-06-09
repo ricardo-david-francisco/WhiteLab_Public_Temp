@@ -8,9 +8,9 @@
 > Issues; this file is a snapshot for offline reading and for the
 > NotebookLM digest.
 
-* **Generated:** `2026-05-18T10:39:58Z`
-* **Repository:** `ricardo-david-francisco/WhiteLab`
-* **Source of truth:** [GitHub Issues](https://github.com/ricardo-david-francisco/WhiteLab/issues)
+* **Generated:** `2026-06-09T20:20:52Z`
+* **Repository:** `ricardo-david-francisco/WhiteLab_Public_Temp`
+* **Source of truth:** [GitHub Issues](https://github.com/ricardo-david-francisco/WhiteLab_Public_Temp/issues)
 * **Capture flow:** open GitHub Mobile → `+` → `New issue` →
   pick the *Shower thought* template. Two taps from the shower.
 
@@ -41,21 +41,13 @@ _None._
 
 ### Open · status:inbox or no status label
 
-* [#17](https://github.com/ricardo-david-francisco/WhiteLab/issues/17) [bootstrap] Centralised capture / roadmap / RFC system
-* [#24](https://github.com/ricardo-david-francisco/WhiteLab/issues/24) [critique #4] Observability Gap — status:inbox, critique
-* [#25](https://github.com/ricardo-david-francisco/WhiteLab/issues/25) [critique #5] Disaster Recovery: No Codified Break-Glass — status:inbox, critique
-* [#26](https://github.com/ricardo-david-francisco/WhiteLab/issues/26) [critique #6] Documentation Hygiene: Desired State vs Roadmap — status:inbox, critique
-* [#27](https://github.com/ricardo-david-francisco/WhiteLab/issues/27) [critique #7] IP Plan: AdGuard DMZ Subnet Collision — status:inbox, critique
-* [#29](https://github.com/ricardo-david-francisco/WhiteLab/issues/29) [critique #9] Total Cluster Loss: Laptop-as-Agent Mode — status:inbox, critique
-* [#33](https://github.com/ricardo-david-francisco/WhiteLab/issues/33) Weekly digest — 2026-05-11 — docs, pinned
+_None._
 
 ## Recently done (closed in the last 14 days)
 
 ### Closed ≤14d
 
-* [#21](https://github.com/ricardo-david-francisco/WhiteLab/issues/21) [critique #2] Operational Friction at the TOTP Gate — status:inbox, critique, decision
-* [#22](https://github.com/ricardo-david-francisco/WhiteLab/issues/22) [critique #3] Hardening Inconsistency: SSH Surface Across Nodes — status:inbox, critique, decision
-* [#28](https://github.com/ricardo-david-francisco/WhiteLab/issues/28) [critique #8] Resilience: Single-Instance Fortress Agent — status:inbox, critique, decision
+_None._
 
 ## By type (open issues)
 
