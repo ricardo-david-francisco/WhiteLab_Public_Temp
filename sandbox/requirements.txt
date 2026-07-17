@@ -3,7 +3,7 @@
 # Hashes are not pinned at this stage; once tools/ stabilizes, regenerate with
 # `pip-compile --generate-hashes` and switch bootstrap.sh to --require-hashes.
 
-lxml>=6.1.0,<7           # XML parsing for OPNsense config.xml
+lxml>=6.1.1,<7           # XML parsing for OPNsense config.xml
 ruamel.yaml>=0.19.1,<0.20  # round-trip YAML for Omada/Proxmox configs
 detect-secrets>=1.5,<2 # used by the verify pre-commit hook
 pre-commit>=4.6.0,<5
