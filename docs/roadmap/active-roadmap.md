@@ -8,7 +8,7 @@
 > Issues; this file is a snapshot for offline reading and for the
 > NotebookLM digest.
 
-* **Generated:** `2026-07-17T07:03:43Z`
+* **Generated:** `2026-07-17T18:36:45Z`
 * **Repository:** `ricardo-david-francisco/WhiteLab_Public_Temp`
 * **Source of truth:** [GitHub Issues](https://github.com/ricardo-david-francisco/WhiteLab_Public_Temp/issues)
 * **Capture flow:** open GitHub Mobile → `+` → `New issue` →
