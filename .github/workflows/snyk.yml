@@ -43,7 +43,7 @@ jobs:
         env:
             SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
             - uses: snyk/actions/setup@master
             - name: snyk code test
               run: snyk code test --severity-threshold=high || true
@@ -55,7 +55,7 @@ jobs:
         env:
             SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
             - uses: snyk/actions/setup@master
             - name: snyk iac test
               run: |
@@ -70,7 +70,7 @@ jobs:
         env:
             SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
             - uses: actions/setup-python@v6
               with:
                   python-version: "3.11"
